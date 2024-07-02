@@ -1,0 +1,168 @@
+import tkinter as tk
+
+
+# Function to append value to display
+def disp(value):
+    display.config(state=tk.NORMAL)
+    current_text = display.get("1.0", tk.END).strip()
+    new_text = current_text + str(value)
+    display.delete("1.0", tk.END)
+    display.insert(tk.END, new_text)
+    display.config(state=tk.DISABLED)
+
+
+# Function to delete last character from display
+def DEL():
+    display.config(state=tk.NORMAL)
+    current_text = display.get("1.0", tk.END).strip()
+    new_text = current_text[:-1]
+    display.delete("1.0", tk.END)
+    display.insert(tk.END, new_text)
+    display.config(state=tk.DISABLED)
+
+
+# Function to clear entire display
+def AC():
+    display.config(state=tk.NORMAL)
+    display.delete("1.0", tk.END)
+    display.config(state=tk.DISABLED)
+
+
+# Function to evaluate expression and display result
+def equal():
+    expression = display.get("1.0", tk.END).strip()
+
+    # Operator precedence dictionary
+    precedence = {'+': 1, '-': 1, '*': 2, '/': 2}
+
+    # Stack for operands and operators
+    operands = []
+    operators = []
+
+    # Function to check if a character is an operator
+    def is_operator(char):
+        return char in precedence
+
+    # Function to perform operation based on operator
+    def perform_operation(op, operand1, operand2):
+        if op == '+':
+            return operand1 + operand2
+        elif op == '-':
+            return operand1 - operand2
+        elif op == '*':
+            return operand1 * operand2
+        elif op == '/':
+            return operand1 / operand2
+        else:
+            raise ValueError("Invalid operator")
+
+    # Function to evaluate expression
+    def evaluate(expression):
+        i = 0
+        while i < len(expression):
+            if expression[i].isdigit():
+                # Extract multi-digit number
+                num = ""
+                while i < len(expression) and expression[i].isdigit():
+                    num += expression[i]
+                    i += 1
+                operands.append(int(num))
+                continue  # Skip incrementing i because we are already at the next character after the number
+
+            elif expression[i] == '(':
+                operators.append(expression[i])
+
+            elif expression[i] == ')':
+                while operators and operators[-1] != '(':
+                    op = operators.pop()
+                    operand2 = operands.pop()
+                    operand1 = operands.pop()
+                    result = perform_operation(op, operand1, operand2)
+                    operands.append(result)
+                operators.pop()  # Remove '(' from operators stack
+
+            elif is_operator(expression[i]):
+                while (operators and operators[-1] != '(' and
+                       precedence.get(operators[-1], 0) >= precedence.get(expression[i], 0)):
+                    op = operators.pop()
+                    operand2 = operands.pop()
+                    operand1 = operands.pop()
+                    result = perform_operation(op, operand1, operand2)
+                    operands.append(result)
+                operators.append(expression[i])
+
+            i += 1
+
+        # Process remaining operators in stack
+        while operators:
+            op = operators.pop()
+            operand2 = operands.pop()
+            operand1 = operands.pop()
+            result = perform_operation(op, operand1, operand2)
+            operands.append(result)
+
+        return operands[-1]
+
+    # Remove whitespaces from expression and evaluate
+    expression = expression.replace(" ", "")
+    ans = evaluate(expression)
+
+    # Displaying the result
+    display.config(state=tk.NORMAL)
+    display.delete("1.0", tk.END)
+    display.insert(tk.END, ans)
+    display.config(state=tk.DISABLED)
+
+
+# New window
+root = tk.Tk()
+root.title("Calculator")
+root.geometry("166x251")
+root.configure(bg='#ffffff')
+root.resizable(width=False, height=False)  # To prevent the window from resizing
+
+# Display Box, we use an entry box and disable editing options
+display = tk.Text(root, font=("Arial", 12), bd=10, insertwidth=2, width=17, height=2, borderwidth=4)
+display.grid(row=0, column=0, columnspan=4)
+display.config(state=tk.DISABLED)
+
+# Buttons for Numbers and Operations
+b1 = tk.Button(root, text=1, width=5, height=2, command=lambda: disp(1))
+b2 = tk.Button(root, text=2, width=5, height=2, command=lambda: disp(2))
+b3 = tk.Button(root, text=3, width=5, height=2, command=lambda: disp(3))
+b4 = tk.Button(root, text=4, width=5, height=2, command=lambda: disp(4))
+b5 = tk.Button(root, text=5, width=5, height=2, command=lambda: disp(5))
+b6 = tk.Button(root, text=6, width=5, height=2, command=lambda: disp(6))
+b7 = tk.Button(root, text=7, width=5, height=2, command=lambda: disp(7))
+b8 = tk.Button(root, text=8, width=5, height=2, command=lambda: disp(8))
+b9 = tk.Button(root, text=9, width=5, height=2, command=lambda: disp(9))
+b0 = tk.Button(root, text=0, width=5, height=2, command=lambda: disp(0))
+b_add = tk.Button(root, text="+", width=4, height=2, command=lambda: disp('+'))
+b_sub = tk.Button(root, text="-", width=4, height=2, command=lambda: disp('-'))
+b_mul = tk.Button(root, text="x", width=4, height=2, command=lambda: disp('*'))
+b_div = tk.Button(root, text="/", width=4, height=2, command=lambda: disp('/'))
+b_DEL = tk.Button(root, text="DEL", width=5, height=2, command=DEL)
+b_AC = tk.Button(root, text="AC", width=5, height=2, command=AC)
+b_equal = tk.Button(root, text="=", width=23, height=2, command=equal)
+
+# Placing Buttons and screen in a grid
+display.grid(row=0, column=0, columnspan=4)
+b7.grid(row=1, column=0)
+b8.grid(row=1, column=1)
+b9.grid(row=1, column=2)
+b_add.grid(row=1, column=3)
+b4.grid(row=2, column=0)
+b5.grid(row=2, column=1)
+b6.grid(row=2, column=2)
+b_sub.grid(row=2, column=3)
+b1.grid(row=3, column=0)
+b2.grid(row=3, column=1)
+b3.grid(row=3, column=2)
+b_mul.grid(row=3, column=3)
+b_DEL.grid(row=4, column=0)
+b0.grid(row=4, column=1)
+b_AC.grid(row=4, column=2)
+b_div.grid(row=4, column=3)
+b_equal.grid(row=5, column=0, columnspan=4)
+
+root.mainloop()
